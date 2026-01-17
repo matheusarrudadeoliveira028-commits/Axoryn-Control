@@ -1,7 +1,28 @@
+import { verificarAcesso } from '@/services/subscription'; // Certifique-se que o caminho está certo
 import { FontAwesome } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
+import { useEffect } from 'react';
 
 export default function TabLayout() {
+  const router = useRouter();
+
+  // --- O CÓDIGO DO "FISCAL" COMEÇA AQUI ---
+  useEffect(() => {
+    const protegerApp = async () => {
+      // Pergunta para o serviço se o usuário pode entrar
+      const acessoPermitido = await verificarAcesso();
+      
+      if (!acessoPermitido) {
+        // Se NÃO tiver acesso (teste acabou e não pagou), manda para o Paywall
+        // O 'replace' impede que ele volte usando o botão voltar do celular
+        router.replace('/paywall'); 
+      }
+    };
+    
+    protegerApp();
+  }, []);
+  // --- FIM DO CÓDIGO DO "FISCAL" ---
+
   return (
     <Tabs screenOptions={{
       headerShown: false,
@@ -18,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Carteira', // Mudado de 'Resumo' para 'Carteira'
+          title: 'Carteira', 
           tabBarIcon: ({ color }) => <FontAwesome name="money" size={24} color={color} />,
         }}
       />
@@ -41,8 +62,8 @@ export default function TabLayout() {
       <Tabs.Screen name="financeiro" options={{ href: null }} />
       <Tabs.Screen name="auth" options={{ href: null }} />
       <Tabs.Screen name="modal" options={{ href: null }} />
-      <Tabs.Screen name="tabs" options={{ href: null }} />
-      <Tabs.Screen name="(tabs)" options={{ href: null }} />
+      {/* <Tabs.Screen name="tabs" options={{ href: null }} />  <- Comentei para evitar erro de rota duplicada */}
+      {/* <Tabs.Screen name="(tabs)" options={{ href: null }} /> <- Comentei para evitar erro de rota duplicada */}
 
     </Tabs>
   );

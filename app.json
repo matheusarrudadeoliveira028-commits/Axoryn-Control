@@ -1,26 +1,28 @@
 {
   "expo": {
-    "name": "axoryn-control",
+    "name": "Axoryn Control",
     "slug": "axoryn-control",
-    "scheme": "axoryn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
+    "scheme": "axoryn",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1a2a3a"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.matheusarruda.axoryncontrol"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1a2a3a"
       },
-      "package": "com.seuusuario.axoryncontrol"
+      "package": "com.matheusarruda.axoryncontrol",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",
@@ -34,8 +36,9 @@
       "typedRoutes": true
     },
     "extra": {
+      "router": {},
       "eas": {
-        "projectId": "seu-project-id-aqui-se-tiver"
+        "projectId": "b5a2c5c5-e3ec-42a5-adf6-f067f56b4489"
       }
     }
   }
