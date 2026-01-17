@@ -14,15 +14,16 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.matheusarruda.axoryncontrol"
+      "bundleIdentifier": "com.axoryn.control"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1a2a3a"
       },
-      "package": "com.matheusarruda.axoryncontrol",
-      "softwareKeyboardLayoutMode": "pan"
+      "package": "com.axoryn.control",
+      "softwareKeyboardLayoutMode": "pan",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",

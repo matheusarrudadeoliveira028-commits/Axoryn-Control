@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1027538914829",
+    "project_id": "axoryn-control",
+    "storage_bucket": "axoryn-control.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1027538914829:android:3c7a995d43e9a32075cf44",
+        "android_client_info": {
+          "package_name": "com.axoryn.control"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3tspV_R8OKcpdHmruzbeUqLaOF3ijnyc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
