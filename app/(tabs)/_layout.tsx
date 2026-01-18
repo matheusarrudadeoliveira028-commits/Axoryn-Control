@@ -1,28 +1,7 @@
-import { verificarAcesso } from '@/services/subscription'; // Certifique-se que o caminho está certo
 import { FontAwesome } from '@expo/vector-icons';
-import { Tabs, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
-  const router = useRouter();
-
-  // --- O CÓDIGO DO "FISCAL" COMEÇA AQUI ---
-  useEffect(() => {
-    const protegerApp = async () => {
-      // Pergunta para o serviço se o usuário pode entrar
-      const acessoPermitido = await verificarAcesso();
-      
-      if (!acessoPermitido) {
-        // Se NÃO tiver acesso (teste acabou e não pagou), manda para o Paywall
-        // O 'replace' impede que ele volte usando o botão voltar do celular
-        router.replace('/paywall'); 
-      }
-    };
-    
-    protegerApp();
-  }, []);
-  // --- FIM DO CÓDIGO DO "FISCAL" ---
-
   return (
     <Tabs screenOptions={{
       headerShown: false,
@@ -35,7 +14,7 @@ export default function TabLayout() {
       },
     }}>
       
-      {/* 1. TELA ESQUERDA (Dashboard) -> Vira "CARTEIRA" */}
+      {/* 1. TELA PRINCIPAL (Carteira) */}
       <Tabs.Screen
         name="index"
         options={{
@@ -44,7 +23,7 @@ export default function TabLayout() {
         }}
       />
 
-      {/* 2. TELA DO MEIO (Arquivo resumo.tsx) -> Vira "RESUMO" */}
+      {/* 2. TELA DE RESUMO */}
       <Tabs.Screen
         name="resumo"
         options={{
@@ -53,17 +32,16 @@ export default function TabLayout() {
         }}
       />
 
-      {/* --- ITENS REMOVIDOS --- */}
-
-      {/* Remove o Explore */}
-      <Tabs.Screen name="explore" options={{ href: null }} />
-
-      {/* Garante que outros não apareçam */}
-      <Tabs.Screen name="financeiro" options={{ href: null }} />
-      <Tabs.Screen name="auth" options={{ href: null }} />
-      <Tabs.Screen name="modal" options={{ href: null }} />
-      {/* <Tabs.Screen name="tabs" options={{ href: null }} />  <- Comentei para evitar erro de rota duplicada */}
-      {/* <Tabs.Screen name="(tabs)" options={{ href: null }} /> <- Comentei para evitar erro de rota duplicada */}
+      {/* CORREÇÃO ABAIXO: 
+          Deixamos APENAS o href: null.
+          Removemos o tabBarButton para não dar conflito.
+      */}
+      <Tabs.Screen 
+        name="explore" 
+        options={{ 
+          href: null,
+        }} 
+      />
 
     </Tabs>
   );

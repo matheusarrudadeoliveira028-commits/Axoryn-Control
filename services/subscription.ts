@@ -46,7 +46,7 @@ export const verificarAcesso = async () => {
     const diferencaEmTempo = hoje.getTime() - dataCriacao.getTime();
     const diasDeUso = diferencaEmTempo / (1000 * 3600 * 24);
 
-    if (diasDeUso <= 0) {
+    if (diasDeUso <= 7) {
       console.log(`Acesso LIBERADO: Período de teste (${Math.floor(diasDeUso)} dias usados) 🎁`);
       return true;
     }

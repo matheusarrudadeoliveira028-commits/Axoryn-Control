@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -11,28 +13,37 @@ import {
   View
 } from 'react-native';
 
-import { BarraPesquisa } from '../../components/BarraPesquisa';
-import Dashboard from '../../components/Dashboard';
-import ListaCobranca from '../../components/ListaCobranca';
-import MenuAbas from '../../components/MenuAbas';
-import PastaCliente from '../../components/PastaCliente';
-import TelaCadastro from '../../components/TelaCadastro';
-import Topo from '../../components/Topo';
+// Serviços
+import { verificarNotificacoes } from '@/services/NotificacaoService'; // ✅ (1) Import Recolocado
+import { verificarAcesso } from '@/services/subscription';
 
-import ModalAcao from '../../components/ModalAcao';
-import ModalEditarCliente from '../../components/ModalEditarCliente';
-import ModalEditarEmprestimo from '../../components/ModalEditarEmprestimo';
-import ModalNovoEmprestimo from '../../components/ModalNovoEmprestimo';
-import ModalPagarParcela from '../../components/ModalPagarParcela';
-import ModalParcelamento from '../../components/ModalParcelamento';
-import ModalRelatorio from '../../components/ModalRelatorio';
+// Componentes
+import { BarraPesquisa } from '@/components/BarraPesquisa';
+import Dashboard from '@/components/Dashboard';
+import ListaCobranca from '@/components/ListaCobranca';
+import MenuAbas from '@/components/MenuAbas';
+import PastaCliente from '@/components/PastaCliente';
+import TelaCadastro from '@/components/TelaCadastro';
+import Topo from '@/components/Topo';
 
-import { useClientes } from '../../hooks/useClientes';
+// Modais
+import ModalAcao from '@/components/ModalAcao';
+import ModalEditarCliente from '@/components/ModalEditarCliente';
+import ModalEditarEmprestimo from '@/components/ModalEditarEmprestimo';
+import ModalNovoEmprestimo from '@/components/ModalNovoEmprestimo';
+import ModalPagarParcela from '@/components/ModalPagarParcela';
+import ModalParcelamento from '@/components/ModalParcelamento';
+import ModalRelatorio from '@/components/ModalRelatorio';
 
-// TESTE DE ISOLAMENTO: Comentando o serviço de notificação para o app não crashar
-// import { verificarNotificacoes } from '../../services/NotificacaoService';
+import { useClientes } from '@/hooks/useClientes';
 
 export default function VertoApp() {
+  const router = useRouter();
+
+  // --- ESTADOS DE CONTROLE DE ACESSO ---
+  const [checando, setChecando] = useState(true);
+  const [acessoLiberado, setAcessoLiberado] = useState(false);
+
   const { 
     clientes, totais, loading, fetchData, 
     adicionarCliente, editarCliente, excluirCliente, 
@@ -44,6 +55,44 @@ export default function VertoApp() {
   const [pastasAbertas, setPastasAbertas] = useState<any>({});
   const [textoBusca, setTextoBusca] = useState('');
 
+  // --- 1. LÓGICA DE PROTEÇÃO (Paywall) ---
+  useEffect(() => {
+    let isMounted = true;
+
+    async function validarAcesso() {
+      try {
+        const temAcesso = await verificarAcesso();
+        
+        if (!isMounted) return;
+
+        if (!temAcesso) {
+          router.replace('/paywall');
+        } else {
+          setAcessoLiberado(true);
+        }
+      } catch (error) {
+        console.log("Erro ao verificar acesso:", error);
+        router.replace('/paywall');
+      } finally {
+        if (isMounted) setChecando(false);
+      }
+    }
+
+    validarAcesso();
+
+    return () => { isMounted = false; };
+  }, []);
+
+  // --- 2. NOTIFICAÇÕES (✅ Religado!) ---
+  useEffect(() => {
+    // Só chama o Firebase se o usuário já passou pelo Paywall e tem clientes carregados
+    if (acessoLiberado && clientes.length > 0) {
+      console.log("Verificando notificações automáticas...");
+      verificarNotificacoes(clientes);
+    }
+  }, [clientes, acessoLiberado]);
+
+  // Modais State
   const [modalNovoEmprestimo, setModalNovoEmprestimo] = useState({ visivel: false, clientePreSelecionado: '' });
   const [modalAcao, setModalAcao] = useState<any>({ visivel: false, tipo: '', contrato: null, cliente: '' });
   const [modalEditarCliente, setModalEditarCliente] = useState(false);
@@ -56,16 +105,12 @@ export default function VertoApp() {
   const [clienteEditandoNome, setClienteEditandoNome] = useState<any>(null);
   const [contratoSendoEditado, setContratoSendoEditado] = useState<any>(null);
 
-  // TESTE DE ISOLAMENTO: Comentando o useEffect da notificação
-  // useEffect(() => {
-  //   if (clientes.length > 0) verificarNotificacoes(clientes);
-  //   // registrarTokenPush(); <--- Se existisse essa função aqui, também estaria desligada
-  // }, [clientes]);
-
+  // Filtro de Busca
   const clientesFiltrados = clientes.filter((cli: any) => 
     cli.nome.toLowerCase().includes(textoBusca.toLowerCase())
   );
 
+  // Funções de Ação
   const salvarNovoCliente = async (novo: any) => { await adicionarCliente(novo); setAba('carteira'); };
   const abrirEdicaoCliente = (cli: any) => { setClienteSendoEditado(cli); setModalEditarCliente(true); };
   const salvarEdicaoCliente = async (dados: any) => { await editarCliente(clienteSendoEditado.nome, dados); setModalEditarCliente(false); setClienteSendoEditado(null); };
@@ -98,12 +143,24 @@ export default function VertoApp() {
     setModalPagarParcela({ visivel: false, contrato: null, clienteNome: '' });
   };
 
+  // --- BLOQUEIO VISUAL (A CORTINA) ---
+  if (checando || !acessoLiberado) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F0F2F5' }}>
+        <ActivityIndicator size="large" color="#2C3E50" />
+        <Text style={{ marginTop: 20, color: '#666', fontWeight: '500' }}>
+          Verificando sua assinatura...
+        </Text>
+      </View>
+    );
+  }
+
+  // --- RENDERIZAÇÃO DO APP ---
   return (
     <View style={styles.container}>
       <Topo dados={clientes} />
       <MenuAbas abaAtual={aba} setAba={setAba} />
 
-      {/* MUDANÇA AQUI: behavior='height' para Android */}
       <KeyboardAvoidingView 
         style={{ flex: 1 }} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -175,7 +232,7 @@ export default function VertoApp() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0F2F5', paddingTop: 40 },
+  container: { flex: 1, backgroundColor: '#F0F2F5', paddingTop: 10 },
   content: { padding: 15 },
   btnRelatorio: { flexDirection: 'row', backgroundColor: '#FFF', padding: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 10, elevation: 1, borderWidth: 1, borderColor: '#EEE' }
 });

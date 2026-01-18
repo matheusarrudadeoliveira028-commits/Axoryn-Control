@@ -26,20 +26,33 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isMounted) return;
 
+    // Identifica onde o usuário está
     const inTabsGroup = segments[0] === '(tabs)';
-    // ✅ NOVO: Verifica se estamos na tela de resetar senha
+    const inAuthGroup = segments[0] === 'auth';
     const inResetPassword = segments[0] === 'reset-password';
+    const inPaywall = segments[0] === 'paywall'; // ✅ NOVO: Reconhece o Paywall
 
     if (session) {
-      // Se tem sessão, mas não está nas abas E nem na tela de reset
-      if (!inTabsGroup && !inResetPassword) {
+      // --- USUÁRIO LOGADO ---
+      
+      // 1. Se tentar voltar pra tela de login, joga pra Home
+      if (inAuthGroup) {
+        router.replace('/(tabs)');
+      } 
+      // 2. Se estiver perdido (fora das abas, fora do reset e FORA DO PAYWALL), joga pra Home.
+      // AQUI ESTAVA O ERRO: Adicionamos '!inPaywall' para ele não tirar a pessoa de lá.
+      else if (!inTabsGroup && !inResetPassword && !inPaywall) {
         router.replace('/(tabs)');
       }
+
     } else {
-      // Se NÃO tem sessão, e tenta acessar abas ou reset, manda pro login
-      if (inTabsGroup || inResetPassword) {
+      // --- USUÁRIO DESLOGADO ---
+      
+      // Se tentar acessar Abas ou Paywall sem conta, manda pro Login
+      if (inTabsGroup || inPaywall) {
         router.replace('/auth');
       }
+      // Nota: Não bloqueamos o 'reset-password' para permitir recuperar senha
     }
   }, [session, isMounted, segments]);
 
@@ -55,7 +68,9 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="auth" />
       <Stack.Screen name="(tabs)" />
-      {/* ✅ Adicione a tela aqui caso precise de opções específicas, mas o default já funciona */}
+      <Stack.Screen name="paywall" /> 
+      {/* Adicionei o paywall na stack para a transição ser suave */}
+      
       <Stack.Screen name="reset-password" /> 
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
     </Stack>
