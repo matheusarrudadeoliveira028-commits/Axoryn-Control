@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
-  KeyboardAvoidingView, // Importado
+  KeyboardAvoidingView,
   Modal,
-  Platform, // Importado
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -149,14 +149,26 @@ export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelec
                   placeholder="Ex: 1 Perfume, 1 Kit..." 
                 />
                 
+                {/* LINHA UNIFICADA DE RECEBIMENTO: PARCELAS | JUROS | MULTA */}
+                <Text style={[styles.label, {marginTop: 15}]}>Condições de Recebimento</Text>
                 <View style={{flexDirection:'row', gap:10}}>
                    <View style={{flex:1}}>
-                      <Text style={styles.label}>Nº Parcelas</Text>
+                      <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>Parcelas</Text>
                       <TextInput style={styles.input} value={qtdParcelasVenda} onChangeText={setQtdParcelasVenda} keyboardType="numeric" placeholder="Ex: 3" />
                    </View>
                    <View style={{flex:1}}>
-                      <Text style={styles.label}>Juros Total (%)</Text>
+                      <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>Juros (%)</Text>
                       <TextInput style={styles.input} value={taxa} onChangeText={setTaxa} keyboardType="numeric" />
+                   </View>
+                   <View style={{flex:1.2}}>
+                      <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>Multa Diária (R$)</Text>
+                      <TextInput 
+                        style={styles.input} 
+                        value={multa} 
+                        onChangeText={setMulta} 
+                        keyboardType="numeric" 
+                        placeholder="0.00" 
+                      />
                    </View>
                 </View>
               </>
