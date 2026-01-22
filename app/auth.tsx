@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react'; // <--- useRef IMPORTADO AQUI
 import {
   Alert,
   Image,
@@ -32,10 +32,25 @@ export default function Auth() {
   const [termosAceitos, setTermosAceitos] = useState(false);
   const [modalTermosVisivel, setModalTermosVisivel] = useState(false);
 
+  // 🔒 TRAVA DE SEGURANÇA PARA EVITAR CLIQUES DUPLOS
+  const processandoLink = useRef(false);
+
   useEffect(() => {
     const handleDeepLink = async (event: { url: string }) => {
+      // SE JÁ ESTIVER PROCESSANDO UM LINK, IGNORA OS OUTROS
+      if (processandoLink.current) {
+        console.log("🚫 Ignorando link duplicado/repetido.");
+        return;
+      }
+
+      // ATIVA A TRAVA
+      processandoLink.current = true;
+      
+      // LIBERA A TRAVA APÓS 2 SEGUNDOS
+      setTimeout(() => { processandoLink.current = false; }, 2000);
+
       let url = event.url;
-      console.log("🔗 LINK:", url);
+      console.log("🔗 LINK RECEBIDO:", url);
 
       if (url.includes('%23')) url = url.replace('%23', '#');
 
@@ -63,7 +78,10 @@ export default function Auth() {
             // LÓGICA DE RECUPERAÇÃO (Vindo de recuperar.html)
             else if (type === 'recovery') {
               const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-              if (!error) setModalNovaSenha(true); 
+              if (!error) {
+                // Abre o modal apenas uma vez
+                setModalNovaSenha(true); 
+              }
             } 
             // LOGIN DIRETO
             else {
@@ -94,13 +112,12 @@ export default function Auth() {
     setLoading(true);
     try {
       if (isSignUp) {
-        // --- CADASTRO: APONTA PARA confirmar.html ---
+        // --- CADASTRO ---
         const { error }: any = await loginComTimeout(
           supabase.auth.signUp({ 
             email, 
             password,
             options: {
-              // 👇 LINK CORRIGIDO AQUI
               emailRedirectTo: 'https://regal-capybara-c7ac2c.netlify.app/confirmar.html' 
             }
           })
