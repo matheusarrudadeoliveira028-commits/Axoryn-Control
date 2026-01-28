@@ -2,6 +2,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next'; // <--- Importação da tradução
 import { Alert, Linking, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Cliente, Contrato } from '../types';
 
@@ -17,21 +18,22 @@ type Props = {
   aoRenovarOuQuitar: (tipo: string, c: Contrato) => void;
   aoNegociar: (c: Contrato) => void;
   aoPagarParcela: (c: Contrato) => void;
-  aoAlternarBloqueio: (c: Cliente) => void; // <--- NOVO: Recebe a função de bloqueio
+  aoAlternarBloqueio: (c: Cliente) => void;
 };
 
 export default function PastaCliente({ 
   cliente, expandido, aoExpandir, aoNovoEmprestimo, 
   aoEditarCliente, aoExcluirCliente, aoEditarContrato, aoExcluirContrato, 
   aoRenovarOuQuitar, aoNegociar, aoPagarParcela,
-  aoAlternarBloqueio // <--- NOVO
+  aoAlternarBloqueio 
 }: Props) {
 
+  const { t } = useTranslation(); // <--- Hook de tradução
   const [historicoVisivel, setHistoricoVisivel] = useState(false);
   const [historicoConteudo, setHistoricoConteudo] = useState<string[]>([]);
 
   const abrirWhatsapp = (numero: string) => {
-    if (!numero) return Alert.alert("Ops", "Cliente sem número cadastrado.");
+    if (!numero) return Alert.alert("Ops", t('pastaCliente.erroZap') || "Cliente sem número cadastrado.");
     const apenasNumeros = numero.replace(/\D/g, '');
     Linking.openURL(`https://wa.me/55${apenasNumeros}`);
   };
@@ -41,10 +43,12 @@ export default function PastaCliente({
     setHistoricoVisivel(true);
   };
 
-  // --- NOVO: Lógica para impedir novo empréstimo se bloqueado ---
   const handleNovoEmprestimo = () => {
     if (cliente.bloqueado) {
-      return Alert.alert("🚫 Cliente Bloqueado", "Este cliente possui um bloqueio administrativo. Remova o cadeado para criar novos empréstimos.");
+      return Alert.alert(
+        t('pastaCliente.bloqueadoTitulo') || "🚫 Cliente Bloqueado", 
+        t('pastaCliente.bloqueadoMsg') || "Este cliente possui um bloqueio administrativo. Remova o cadeado para criar novos empréstimos."
+      );
     }
     aoNovoEmprestimo();
   };
@@ -55,8 +59,8 @@ export default function PastaCliente({
       const dataEmissao = new Date().toLocaleDateString('pt-BR');
       
       const isVenda = con.frequencia === 'PARCELADO' || (con.garantia && con.garantia.startsWith('PRODUTO:'));
-      const labelGarantia = isVenda ? '📦 Produto/Serviço' : '🔐 Garantia';
-      const textoGarantia = con.garantia ? con.garantia.replace('PRODUTO:', '').trim() : 'Não informada';
+      const labelGarantia = isVenda ? (t('pdf.produtoServico') || '📦 Produto/Serviço') : (t('pdf.garantia') || '🔐 Garantia');
+      const textoGarantia = con.garantia ? con.garantia.replace('PRODUTO:', '').trim() : (t('pdf.naoInformada') || 'Não informada');
 
       const linhasHistorico = (con.movimentacoes || []).map((m, index) => `
         <tr style="background-color: ${index % 2 === 0 ? '#fff' : '#f9f9f9'}">
@@ -67,13 +71,13 @@ export default function PastaCliente({
       let infoExtra = '';
       if (con.status === 'PARCELADO') {
         infoExtra = `
-          <div class="item"><span>Parcelas:</span> <b>${con.parcelasPagas}/${con.totalParcelas}</b></div>
-          <div class="item"><span>Valor Parcela:</span> <b>R$ ${(con.valorParcela || 0).toFixed(2)}</b></div>
+          <div class="item"><span>${t('pdf.parcelas') || 'Parcelas'}:</span> <b>${con.parcelasPagas}/${con.totalParcelas}</b></div>
+          <div class="item"><span>${t('pdf.valorParcela') || 'Valor Parcela'}:</span> <b>R$ ${(con.valorParcela || 0).toFixed(2)}</b></div>
         `;
       } else {
         infoExtra = `
-          <div class="item"><span>Taxa de Juros:</span> <b>${con.taxa}%</b></div>
-          <div class="item"><span>Multa Diária:</span> <b>R$ ${(con.valorMultaDiaria || 0).toFixed(2)}</b></div>
+          <div class="item"><span>${t('pdf.taxaJuros') || 'Taxa de Juros'}:</span> <b>${con.taxa}%</b></div>
+          <div class="item"><span>${t('pdf.multaDiaria') || 'Multa Diária'}:</span> <b>R$ ${(con.valorMultaDiaria || 0).toFixed(2)}</b></div>
         `;
       }
 
@@ -105,32 +109,32 @@ export default function PastaCliente({
             <div class="header">
               <div class="brand">Axoryn Control</div>
               <div class="meta">
-                EMISSÃO: ${dataEmissao}<br/>
-                CONTRATO Nº: <b>${con.id}</b>
+                ${t('pdf.emissao') || 'EMISSÃO'}: ${dataEmissao}<br/>
+                ${t('pdf.contratoN') || 'CONTRATO Nº'}: <b>${con.id}</b>
               </div>
             </div>
             <div class="grid-container">
               <div class="box">
-                <div class="label">CLIENTE</div>
+                <div class="label">${t('pdf.cliente') || 'CLIENTE'}</div>
                 <span class="value">${cliente.nome}</span>
                 <div class="item"><span>WhatsApp:</span> ${cliente.whatsapp || '-'}</div>
-                <div class="item"><span>Endereço:</span> ${cliente.endereco || '-'}</div>
+                <div class="item"><span>${t('pdf.endereco') || 'Endereço'}:</span> ${cliente.endereco || '-'}</div>
               </div>
               <div class="box">
-                <div class="label">RESUMO FINANCEIRO</div>
+                <div class="label">${t('pdf.resumoFinanceiro') || 'RESUMO FINANCEIRO'}</div>
                 <div class="row-items">
                   <div class="item"><span>Status:</span> <b>${con.status}</b></div>
-                  <div class="item"><span>Frequência:</span> <b>${con.frequencia}</b></div>
-                  <div class="item"><span>Início:</span> ${con.dataInicio || '-'}</div>
-                  <div class="item"><span>Vencimento:</span> <b style="color:#C0392B">${con.proximoVencimento}</b></div>
+                  <div class="item"><span>${t('pdf.frequencia') || 'Frequência'}:</span> <b>${con.frequencia}</b></div>
+                  <div class="item"><span>${t('pdf.inicio') || 'Início'}:</span> ${con.dataInicio || '-'}</div>
+                  <div class="item"><span>${t('pdf.vencimento') || 'Vencimento'}:</span> <b style="color:#C0392B">${con.proximoVencimento}</b></div>
                 </div>
               </div>
             </div>
             <div class="box" style="background-color: #FFF; border: 2px solid #F0F2F5;">
                <div class="row-items">
-                  <div class="item" style="font-size:14px"><span>Valor Principal:</span> <b style="color:#27AE60">R$ ${con.capital.toFixed(2)}</b></div>
-                  <div class="item" style="font-size:14px"><span>Juros Recebidos:</span> <b style="color:#2980B9">R$ ${(con.lucroTotal || 0).toFixed(2)}</b></div>
-                  <div class="item" style="font-size:14px"><span>Multas Recebidas:</span> <b style="color:#E67E22">R$ ${(con.multasPagas || 0).toFixed(2)}</b></div>
+                  <div class="item" style="font-size:14px"><span>${t('pdf.valorPrincipal') || 'Valor Principal'}:</span> <b style="color:#27AE60">R$ ${con.capital.toFixed(2)}</b></div>
+                  <div class="item" style="font-size:14px"><span>${t('pdf.jurosRecebidos') || 'Juros Recebidos'}:</span> <b style="color:#2980B9">R$ ${(con.lucroTotal || 0).toFixed(2)}</b></div>
+                  <div class="item" style="font-size:14px"><span>${t('pdf.multasRecebidas') || 'Multas Recebidas'}:</span> <b style="color:#E67E22">R$ ${(con.multasPagas || 0).toFixed(2)}</b></div>
                </div>
                <hr style="border:0; border-top:1px solid #eee; margin: 10px 0;"/>
                <div class="row-items">
@@ -138,27 +142,39 @@ export default function PastaCliente({
                   ${infoExtra}
                </div>
             </div>
-            <h3>Histórico de Movimentações</h3>
+            <h3>${t('pdf.historicoTitulo') || 'Histórico de Movimentações'}</h3>
             <table>
               <thead>
-                <tr><th>DESCRIÇÃO DA OPERAÇÃO</th></tr>
+                <tr><th>${t('pdf.colunaDescricao') || 'DESCRIÇÃO DA OPERAÇÃO'}</th></tr>
               </thead>
               <tbody>${linhasHistorico}</tbody>
             </table>
-            <div class="footer">Documento gerado eletronicamente pelo sistema Axoryn Control.<br/>Este extrato serve para simples conferência.</div>
+            <div class="footer">${t('pdf.rodape1') || 'Documento gerado eletronicamente pelo sistema Axoryn Control.'}<br/>${t('pdf.rodape2') || 'Este extrato serve para simples conferência.'}</div>
           </body>
         </html>
       `;
       const { uri } = await Print.printToFileAsync({ html });
       await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
-    } catch (error) { Alert.alert("Erro", "Falha ao gerar PDF."); }
+    } catch (error) { Alert.alert(t('common.erro'), t('pdf.erroGerar') || "Falha ao gerar PDF."); }
   };
   
   const getDetalhesContrato = (garantiaTexto: string = '') => {
     if (garantiaTexto && garantiaTexto.startsWith('PRODUTO:')) {
-       return { ehVenda: true, texto: garantiaTexto.replace('PRODUTO:', '').trim(), label: '📦 Produtos:', icone: 'cart' as const, corIcone: '#E67E22' };
+       return { 
+         ehVenda: true, 
+         texto: garantiaTexto.replace('PRODUTO:', '').trim(), 
+         label: t('pastaCliente.labelProdutos') || '📦 Produtos:', 
+         icone: 'cart' as const, 
+         corIcone: '#E67E22' 
+       };
     }
-    return { ehVenda: false, texto: garantiaTexto || 'Nenhuma', label: '🔐 Garantia:', icone: 'lock-closed' as const, corIcone: '#7F8C8D' };
+    return { 
+      ehVenda: false, 
+      texto: garantiaTexto || (t('pastaCliente.nenhuma') || 'Nenhuma'), 
+      label: t('pastaCliente.labelGarantia') || '🔐 Garantia:', 
+      icone: 'lock-closed' as const, 
+      corIcone: '#7F8C8D' 
+    };
   };
 
   return (
@@ -167,7 +183,7 @@ export default function PastaCliente({
         <View style={styles.modalFundo}>
             <View style={styles.modalConteudo}>
                 <View style={styles.modalTopo}>
-                    <Text style={styles.modalTitulo}>🔍 Histórico Completo</Text>
+                    <Text style={styles.modalTitulo}>{t('pastaCliente.historicoTitulo')}</Text>
                     <TouchableOpacity onPress={() => setHistoricoVisivel(false)}>
                         <Ionicons name="close-circle" size={30} color="#E74C3C" />
                     </TouchableOpacity>
@@ -185,7 +201,6 @@ export default function PastaCliente({
 
       <TouchableOpacity onPress={aoExpandir} style={styles.header}>
         <View style={styles.linhaTitulo}>
-            {/* --- NOVO: Exibe cadeado se bloqueado e muda cor do nome --- */}
             <View style={{flexDirection:'row', alignItems:'center'}}>
                 {cliente.bloqueado && <Text style={{fontSize:18, marginRight:5}}>🔒</Text>}
                 <Text style={[styles.nome, cliente.bloqueado && {color:'#999'}]}>{cliente.nome}</Text>
@@ -198,44 +213,42 @@ export default function PastaCliente({
         <View style={styles.corpo}>
           <View style={styles.fichaCadastral}>
             <TouchableOpacity onPress={() => abrirWhatsapp(cliente.whatsapp)} style={styles.btnZap}>
-              <Text style={styles.txtZap}>💬 Conversar no WhatsApp</Text>
+              <Text style={styles.txtZap}>{t('pastaCliente.btnZap')}</Text>
             </TouchableOpacity>
             
             <View style={{flexDirection:'row', alignItems:'center', marginBottom:5}}>
                 <Ionicons name="pricetag" size={14} color="#2980B9" style={{marginRight:5}} />
                 <Text style={{fontWeight:'bold', color:'#2980B9'}}>
-                   {cliente.segmento === 'VENDA' ? 'VENDA' : cliente.segmento === 'AMBOS' ? 'EMPRÉSTIMO E VENDA' : 'EMPRÉSTIMO'}
+                   {cliente.segmento === 'VENDA' ? t('cadastro.segVenda') : cliente.segmento === 'AMBOS' ? t('cadastro.segAmbos') : t('cadastro.segEmprestimo')}
                 </Text>
             </View>
 
-            <Text style={styles.linhaFicha}>📍 {cliente.endereco || 'Sem endereço'}</Text>
-            {cliente.indicacao ? <Text style={styles.linhaFicha}>🤝 Indicado por: {cliente.indicacao}</Text> : null}
-            <Text style={styles.linhaFicha}>⭐ Reputação: {cliente.reputacao || 'Neutro'}</Text>
+            <Text style={styles.linhaFicha}>📍 {cliente.endereco || t('pastaCliente.semEndereco')}</Text>
+            {cliente.indicacao ? <Text style={styles.linhaFicha}>🤝 {t('pastaCliente.indicadoPor')}: {cliente.indicacao}</Text> : null}
+            <Text style={styles.linhaFicha}>⭐ {t('pastaCliente.reputacao')}: {cliente.reputacao || 'Neutro'}</Text>
           </View>
 
           <View style={styles.acoesCliente}>
             
-            {/* --- NOVO: Botão de Bloquear/Desbloquear --- */}
             <TouchableOpacity 
                 onPress={() => aoAlternarBloqueio(cliente)} 
                 style={[styles.btnAcaoCli, {backgroundColor: cliente.bloqueado ? '#27AE60' : '#FFC300'}]}
             >
                 <Text style={[styles.txtAcaoCli, {color: '#FFF'}]}>
-                    {cliente.bloqueado ? '🔓 Desbloquear' : '🔒 Bloquear'}
+                    {cliente.bloqueado ? t('pastaCliente.desbloquear') : t('pastaCliente.bloquear')}
                 </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={aoEditarCliente} style={styles.btnAcaoCli}><Text style={styles.txtAcaoCli}>Editar</Text></TouchableOpacity>
+            <TouchableOpacity onPress={aoEditarCliente} style={styles.btnAcaoCli}><Text style={styles.txtAcaoCli}>{t('pastaCliente.editar')}</Text></TouchableOpacity>
             
-            {/* --- NOVO: Botão Novo com proteção visual e lógica --- */}
             <TouchableOpacity 
                 onPress={handleNovoEmprestimo} 
                 style={[styles.btnAcaoCli, {backgroundColor: cliente.bloqueado ? '#CCC' : '#2980B9'}]}
             >
-                <Text style={[styles.txtAcaoCli, {color:'#FFF'}]}>+ Novo</Text>
+                <Text style={[styles.txtAcaoCli, {color:'#FFF'}]}>{t('pastaCliente.novo')}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={aoExcluirCliente} style={[styles.btnAcaoCli, {backgroundColor:'#E74C3C'}]}><Text style={[styles.txtAcaoCli, {color:'#FFF'}]}>Excluir</Text></TouchableOpacity>
+            <TouchableOpacity onPress={aoExcluirCliente} style={[styles.btnAcaoCli, {backgroundColor:'#E74C3C'}]}><Text style={[styles.txtAcaoCli, {color:'#FFF'}]}>{t('pastaCliente.excluir')}</Text></TouchableOpacity>
           </View>
 
           {cliente.contratos && cliente.contratos.map((con) => {
@@ -245,7 +258,7 @@ export default function PastaCliente({
             <View key={con.id} style={[styles.contrato, con.status === 'QUITADO' && styles.quitado]}>
               <View style={styles.conHeader}>
                 <View>
-                  <Text style={styles.conId}>Contrato #{con.id}</Text>
+                  <Text style={styles.conId}>{t('pastaCliente.contrato')} #{con.id}</Text>
                   <Text style={styles.conValor}>R$ {con.capital?.toFixed(2)}</Text>
                 </View>
                 <View style={{flexDirection:'row', alignItems:'center', gap: 10}}>
@@ -253,17 +266,17 @@ export default function PastaCliente({
                     <Text style={styles.badgeTxt}>{con.status}</Text>
                   </View>
                   <TouchableOpacity onPress={() => abrirHistoricoCompleto(con.movimentacoes || [])} style={styles.btnIcone}>
-                     <Ionicons name="search-circle" size={28} color="#2980B9" />
+                      <Ionicons name="search-circle" size={28} color="#2980B9" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => gerarPDF(con)} style={styles.btnIcone}>
-                     <Text style={{fontSize:18}}>📄</Text>
+                      <Text style={{fontSize:18}}>📄</Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
               <View style={styles.boxVencimento}>
                 <Ionicons name="calendar" size={18} color="#C0392B" style={{marginRight: 6}} />
-                <Text style={styles.txtVencimento}>VENCE DIA: {con.proximoVencimento}</Text>
+                <Text style={styles.txtVencimento}>{t('pastaCliente.venceDia')} {con.proximoVencimento}</Text>
               </View>
 
               <View style={{flexDirection:'row', alignItems:'flex-start', marginBottom: 5}}>
@@ -277,33 +290,33 @@ export default function PastaCliente({
               {con.status === 'PARCELADO' ? (
                  <View style={{marginTop: 5}}>
                    <Text style={{fontWeight:'bold', color:'#8E44AD'}}>
-                     Progresso: {con.parcelasPagas}/{con.totalParcelas} Pagas (R$ {con.valorParcela?.toFixed(2)})
+                     {t('pastaCliente.progresso')}: {con.parcelasPagas}/{con.totalParcelas} {t('pastaCliente.pagas')} (R$ {con.valorParcela?.toFixed(2)})
                    </Text>
                  </View>
               ) : (
-                 <Text style={styles.info}>Juros: {con.taxa}% ({con.frequencia || 'MENSAL'})</Text>
+                 <Text style={styles.info}>{t('pastaCliente.juros')}: {con.taxa}% ({con.frequencia || 'MENSAL'})</Text>
               )}
 
               {con.status !== 'QUITADO' && (
                 <View style={styles.botoesCon}>
                   {con.status === 'ATIVO' ? (
                     <>
-                      <TouchableOpacity onPress={() => aoRenovarOuQuitar('RENOVAR', con)} style={styles.btnRenovar}><Text style={styles.txtBtn}>RENOVAR</Text></TouchableOpacity>
-                      <TouchableOpacity onPress={() => aoRenovarOuQuitar('QUITAR', con)} style={styles.btnQuitar}><Text style={styles.txtBtn}>QUITAR</Text></TouchableOpacity>
+                      <TouchableOpacity onPress={() => aoRenovarOuQuitar('RENOVAR', con)} style={styles.btnRenovar}><Text style={styles.txtBtn}>{t('pastaCliente.renovar')}</Text></TouchableOpacity>
+                      <TouchableOpacity onPress={() => aoRenovarOuQuitar('QUITAR', con)} style={styles.btnQuitar}><Text style={styles.txtBtn}>{t('pastaCliente.quitar')}</Text></TouchableOpacity>
                     </>
                   ) : (
-                    <TouchableOpacity onPress={() => aoPagarParcela(con)} style={styles.btnParcela}><Text style={styles.txtBtn}>PAGAR PARCELA {((con.parcelasPagas||0)+1)}/{con.totalParcelas}</Text></TouchableOpacity>
+                    <TouchableOpacity onPress={() => aoPagarParcela(con)} style={styles.btnParcela}><Text style={styles.txtBtn}>{t('pastaCliente.pagarParcela')} {((con.parcelasPagas||0)+1)}/{con.totalParcelas}</Text></TouchableOpacity>
                   )}
                   <TouchableOpacity onPress={() => aoExcluirContrato(con.id)} style={styles.btnLixo}><Text>🗑</Text></TouchableOpacity>
                 </View>
               )}
 
               {con.status === 'ATIVO' && (
-                <TouchableOpacity onPress={() => aoNegociar(con)} style={styles.btnNegociar}><Text style={styles.txtBtn}>NEGOCIAR / PARCELAR DÍVIDA</Text></TouchableOpacity>
+                <TouchableOpacity onPress={() => aoNegociar(con)} style={styles.btnNegociar}><Text style={styles.txtBtn}>{t('pastaCliente.negociar')}</Text></TouchableOpacity>
               )}
 
               <View style={styles.historicoResumido}>
-                 <Text style={{fontSize:10, fontWeight:'bold', color:'#999', marginBottom:2}}>ÚLTIMAS MOVIMENTAÇÕES (Resumo):</Text>
+                 <Text style={{fontSize:10, fontWeight:'bold', color:'#999', marginBottom:2}}>{t('pastaCliente.ultimasMovimentacoes')}</Text>
                  {con.movimentacoes?.slice(0, 3).map((m, k) => <Text key={k} style={{fontSize:10, color:'#555'}}>{m}</Text>)}
               </View>
             </View>

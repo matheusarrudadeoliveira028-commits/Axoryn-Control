@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next'; // <--- Importação da tradução
 import {
   Alert,
   KeyboardAvoidingView,
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelecionado, fechar, salvar }: Props) {
+  const { t } = useTranslation(); // <--- Hook de tradução
   const [tipoOperacao, setTipoOperacao] = useState<'EMPRESTIMO' | 'VENDA'>('EMPRESTIMO');
 
   const [clienteId, setClienteId] = useState('');
@@ -66,9 +68,9 @@ export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelec
   };
 
   const handleSalvar = () => {
-    if (!clienteId) return Alert.alert("Erro", "Selecione um cliente.");
-    if (!capital) return Alert.alert("Erro", "Digite o valor.");
-    if (!dataInicio) return Alert.alert("Erro", "Informe a data.");
+    if (!clienteId) return Alert.alert(t('common.erro'), t('novoContrato.erroCliente') || "Selecione um cliente.");
+    if (!capital) return Alert.alert(t('common.erro'), t('novoContrato.erroValor') || "Digite o valor.");
+    if (!dataInicio) return Alert.alert(t('common.erro'), t('novoContrato.erroData') || "Informe a data.");
 
     const valCapital = parseFloat(capital.replace(',', '.'));
     const valTaxa = parseFloat(taxa.replace(',', '.'));
@@ -105,7 +107,7 @@ export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelec
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <View style={styles.janela}>
-          <Text style={styles.titulo}>Novo Contrato</Text>
+          <Text style={styles.titulo}>{t('novoContrato.titulo')}</Text>
 
           {/* ABAS */}
           <View style={styles.abas}>
@@ -113,18 +115,22 @@ export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelec
                style={[styles.aba, tipoOperacao === 'EMPRESTIMO' && styles.abaAtiva]} 
                onPress={() => trocarAba('EMPRESTIMO')}
              >
-               <Text style={[styles.txtAba, tipoOperacao === 'EMPRESTIMO' && styles.txtAbaAtiva]}>💰 EMPRÉSTIMO</Text>
+               <Text style={[styles.txtAba, tipoOperacao === 'EMPRESTIMO' && styles.txtAbaAtiva]}>
+                 {t('novoContrato.tabEmprestimo')}
+               </Text>
              </TouchableOpacity>
              <TouchableOpacity 
                style={[styles.aba, tipoOperacao === 'VENDA' && styles.abaAtiva]} 
                onPress={() => trocarAba('VENDA')}
              >
-               <Text style={[styles.txtAba, tipoOperacao === 'VENDA' && styles.txtAbaAtiva]}>🛒 VENDA</Text>
+               <Text style={[styles.txtAba, tipoOperacao === 'VENDA' && styles.txtAbaAtiva]}>
+                 {t('novoContrato.tabVenda')}
+               </Text>
              </TouchableOpacity>
           </View>
 
           <ScrollView style={{maxHeight: 400}}>
-            <Text style={styles.label}>Cliente</Text>
+            <Text style={styles.label}>{t('novoContrato.cliente')}</Text>
             {clientePreSelecionado ? (
               <TextInput style={[styles.input, {backgroundColor:'#EEE'}]} value={clientePreSelecionado} editable={false} />
             ) : (
@@ -140,92 +146,92 @@ export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelec
             {/* LINHA: VALOR e DATA */}
             <View style={{flexDirection:'row', gap:10}}>
                 <View style={{flex:1.5}}>
-                    <Text style={styles.label}>{tipoOperacao === 'VENDA' ? 'Valor Venda' : 'Valor Empréstimo'}</Text>
+                    <Text style={styles.label}>{tipoOperacao === 'VENDA' ? t('novoContrato.valorVenda') : t('novoContrato.valorEmprestimo')}</Text>
                     <TextInput style={styles.input} value={capital} onChangeText={setCapital} keyboardType="numeric" placeholder="0.00" />
                 </View>
                 <View style={{flex:1}}>
-                    <Text style={styles.label}>Data</Text>
+                    <Text style={styles.label}>{t('novoContrato.data')}</Text>
                     <TextInput style={styles.input} value={dataInicio} onChangeText={setDataInicio} placeholder="DD/MM/AAAA" />
                 </View>
             </View>
 
             {tipoOperacao === 'VENDA' ? (
               <>
-                <Text style={styles.label}>Descrição dos Produtos</Text>
+                <Text style={styles.label}>{t('novoContrato.descricaoProdutos')}</Text>
                 <TextInput 
                   style={[styles.input, {height: 60, textAlignVertical:'top'}]} 
                   value={produtos} 
                   onChangeText={setProdutos} 
                   multiline 
-                  placeholder="Ex: 1 Perfume, 1 Kit..." 
+                  placeholder={t('novoContrato.placeholderProdutos') || "Ex: 1 Perfume, 1 Kit..."} 
                 />
                 
                 {/* --- SELETOR DE MODALIDADE (VENDA) --- */}
                 <View style={{marginTop: 10}}>
-                     <Text style={styles.label}>Modalidade da Venda</Text>
-                     <TouchableOpacity style={styles.btnFreq} onPress={() => setFrequencia(frequencia === 'PARCELADO' ? 'MENSAL' : 'PARCELADO')}>
+                      <Text style={styles.label}>{t('novoContrato.modalidadeVenda')}</Text>
+                      <TouchableOpacity style={styles.btnFreq} onPress={() => setFrequencia(frequencia === 'PARCELADO' ? 'MENSAL' : 'PARCELADO')}>
                         <Text style={{fontWeight:'bold', color:'#333'}}>
-                            {frequencia === 'PARCELADO' ? '📅 PARCELADO (Crediário)' : '🗓️ MENSAL (Juros Recorrente)'}
+                            {frequencia === 'PARCELADO' ? t('novoContrato.freqParcelado') : t('novoContrato.freqMensalRecorrente')}
                         </Text>
-                     </TouchableOpacity>
+                      </TouchableOpacity>
                 </View>
 
                 {/* LINHA UNIFICADA DE RECEBIMENTO: PARCELAS | JUROS | MULTA */}
-                <Text style={[styles.label, {marginTop: 15}]}>Condições de Recebimento</Text>
+                <Text style={[styles.label, {marginTop: 15}]}>{t('novoContrato.condicoesRecebimento')}</Text>
                 <View style={{flexDirection:'row', gap:10}}>
-                   
-                   {/* Só mostra parcelas se for PARCELADO */}
-                   {frequencia === 'PARCELADO' && (
-                       <View style={{flex:1}}>
-                          <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>Parcelas</Text>
-                          <TextInput style={styles.input} value={qtdParcelasVenda} onChangeText={setQtdParcelasVenda} keyboardType="numeric" placeholder="Ex: 3" />
-                       </View>
-                   )}
-                   
-                   <View style={{flex:1}}>
-                      <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>Juros (%)</Text>
-                      <TextInput style={styles.input} value={taxa} onChangeText={setTaxa} keyboardType="numeric" />
-                   </View>
-                   <View style={{flex:1.2}}>
-                      <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>Multa Diária (R$)</Text>
-                      <TextInput 
-                        style={styles.input} 
-                        value={multa} 
-                        onChangeText={setMulta} 
-                        keyboardType="numeric" 
-                        placeholder="0.00" 
-                      />
-                   </View>
+                    
+                    {/* Só mostra parcelas se for PARCELADO */}
+                    {frequencia === 'PARCELADO' && (
+                        <View style={{flex:1}}>
+                           <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>{t('novoContrato.parcelas')}</Text>
+                           <TextInput style={styles.input} value={qtdParcelasVenda} onChangeText={setQtdParcelasVenda} keyboardType="numeric" placeholder="Ex: 3" />
+                        </View>
+                    )}
+                    
+                    <View style={{flex:1}}>
+                       <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>{t('novoContrato.juros')}</Text>
+                       <TextInput style={styles.input} value={taxa} onChangeText={setTaxa} keyboardType="numeric" />
+                    </View>
+                    <View style={{flex:1.2}}>
+                       <Text style={{fontSize:12, color:'#555', fontWeight:'bold', marginBottom:2}}>{t('novoContrato.multaDiaria')}</Text>
+                       <TextInput 
+                         style={styles.input} 
+                         value={multa} 
+                         onChangeText={setMulta} 
+                         keyboardType="numeric" 
+                         placeholder="0.00" 
+                       />
+                    </View>
                 </View>
               </>
             ) : (
               // --- EMPRÉSTIMO ---
               <>
-                <Text style={styles.label}>Garantia (Opcional)</Text>
-                <TextInput style={styles.input} value={garantia} onChangeText={setGarantia} placeholder="Ex: Celular..." />
+                <Text style={styles.label}>{t('novoContrato.garantia')}</Text>
+                <TextInput style={styles.input} value={garantia} onChangeText={setGarantia} placeholder={t('novoContrato.placeholderGarantia') || "Ex: Celular..."} />
 
                 <View style={{flexDirection:'row', gap:10}}>
                   <View style={{flex:1}}>
-                     <Text style={styles.label}>Taxa (%)</Text>
-                     <TextInput style={styles.input} value={taxa} onChangeText={setTaxa} keyboardType="numeric" />
+                      <Text style={styles.label}>{t('novoContrato.taxa')}</Text>
+                      <TextInput style={styles.input} value={taxa} onChangeText={setTaxa} keyboardType="numeric" />
                   </View>
                   <View style={{flex:1}}>
-                     <Text style={styles.label}>Multa Diária (R$)</Text>
-                     <TextInput style={styles.input} value={multa} onChangeText={setMulta} keyboardType="numeric" placeholder="0.00" />
+                      <Text style={styles.label}>{t('novoContrato.multaDiaria')}</Text>
+                      <TextInput style={styles.input} value={multa} onChangeText={setMulta} keyboardType="numeric" placeholder="0.00" />
                   </View>
                 </View>
 
                 {/* --- SELETOR DE MODALIDADE (EMPRESTIMO) --- */}
                 <View style={{marginTop: 10}}>
-                     <Text style={styles.label}>Modalidade</Text>
-                     <TouchableOpacity style={styles.btnFreq} onPress={() => setFrequencia(frequencia === 'MENSAL' ? 'SEMANAL' : frequencia === 'SEMANAL' ? 'DIARIO' : 'MENSAL')}>
+                      <Text style={styles.label}>{t('novoContrato.modalidade')}</Text>
+                      <TouchableOpacity style={styles.btnFreq} onPress={() => setFrequencia(frequencia === 'MENSAL' ? 'SEMANAL' : frequencia === 'SEMANAL' ? 'DIARIO' : 'MENSAL')}>
                         <Text style={{fontWeight:'bold', color:'#333'}}>{frequencia}</Text>
-                     </TouchableOpacity>
+                      </TouchableOpacity>
                 </View>
                 
                 {frequencia === 'DIARIO' && (
                    <View>
-                     <Text style={styles.label}>Quantos dias?</Text>
+                     <Text style={styles.label}>{t('novoContrato.quantosDias')}</Text>
                      <TextInput style={styles.input} value={diasDiario} onChangeText={setDiasDiario} keyboardType="numeric" />
                    </View>
                 )}
@@ -234,13 +240,13 @@ export default function ModalNovoEmprestimo({ visivel, clientes, clientePreSelec
 
             <TouchableOpacity style={styles.btnSalvar} onPress={handleSalvar}>
               <Text style={styles.txtSalvar}>
-                {tipoOperacao === 'VENDA' ? 'CONFIRMAR VENDA' : 'CONFIRMAR EMPRÉSTIMO'}
+                {tipoOperacao === 'VENDA' ? t('novoContrato.btnConfirmarVenda') : t('novoContrato.btnConfirmarEmprestimo')}
               </Text>
             </TouchableOpacity>
           </ScrollView>
 
           <TouchableOpacity style={styles.btnCancelar} onPress={fechar}>
-             <Text style={{color:'#999'}}>Cancelar</Text>
+             <Text style={{color:'#999'}}>{t('novoContrato.cancelar')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -2,6 +2,7 @@ import { Session } from '@supabase/supabase-js';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import '../i18n'; // <--- AQUI: Inicializa as traduções antes de tudo
 import { supabase } from '../services/supabase';
 
 export default function RootLayout() {

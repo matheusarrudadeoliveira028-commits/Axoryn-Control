@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next'; // <--- Importação da tradução
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function Dashboard({ capital, lucro, multas, vendas }: Props) {
+  const { t } = useTranslation(); // <--- Hook de tradução
   const [visivel, setVisivel] = useState(true);
 
   const formatarValor = (valor: number, cor: string) => {
@@ -20,7 +22,9 @@ export default function Dashboard({ capital, lucro, multas, vendas }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.titulo}>Visão Geral</Text>
+        {/* Título traduzido corretamente */}
+        <Text style={styles.titulo}>{t('dashboardStats.visaoGeral')}</Text>
+        
         <TouchableOpacity onPress={() => setVisivel(!visivel)} style={styles.btnOlho}>
           <Ionicons name={visivel ? "eye" : "eye-off"} size={24} color="#555" />
         </TouchableOpacity>
@@ -28,23 +32,22 @@ export default function Dashboard({ capital, lucro, multas, vendas }: Props) {
 
       <View style={styles.linha}>
         <View style={styles.card}>
-          {/* ALTERADO: De 'CAPITAL NA RUA' para 'CAPITAL ATIVO' */}
-          <Text style={styles.label}>CAPITAL ATIVO</Text>
+          <Text style={styles.label}>{t('dashboardStats.capitalAtivo')}</Text>
           {formatarValor(capital, '#E74C3C')}
         </View>
         <View style={styles.card}>
-          <Text style={styles.label}>JUROS EMPRÉSTIMOS</Text>
+          <Text style={styles.label}>{t('dashboardStats.juros')}</Text>
           {formatarValor(lucro, '#2980B9')} 
         </View>
       </View>
 
       <View style={[styles.linha, { marginTop: 10 }]}>
         <View style={styles.card}>
-          <Text style={styles.label}>RECEB. VENDAS</Text>
+          <Text style={styles.label}>{t('dashboardStats.vendas')}</Text>
           {formatarValor(vendas, '#27AE60')}
         </View>
         <View style={styles.card}>
-          <Text style={styles.label}>MULTAS RECEBIDAS</Text>
+          <Text style={styles.label}>{t('dashboardStats.multas')}</Text>
           {formatarValor(multas, '#F39C12')}
         </View>
       </View>

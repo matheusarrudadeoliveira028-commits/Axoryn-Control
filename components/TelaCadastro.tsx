@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next'; // <--- Importação da tradução
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 type Props = {
@@ -6,6 +7,7 @@ type Props = {
 };
 
 export default function TelaCadastro({ aoSalvar }: Props) {
+  const { t } = useTranslation(); // <--- Hook de tradução
   const [nome, setNome] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [endereco, setEndereco] = useState('');
@@ -14,7 +16,8 @@ export default function TelaCadastro({ aoSalvar }: Props) {
   const [segmento, setSegmento] = useState('EMPRESTIMO');
 
   const handleSalvar = () => {
-    if (!nome.trim()) return Alert.alert("Erro", "Nome é obrigatório");
+    // Usa t('common.preenchaCampos') ou texto fixo traduzido
+    if (!nome.trim()) return Alert.alert(t('common.erro'), t('common.preenchaCampos') || "Nome é obrigatório");
     
     aoSalvar({
       nome: nome.trim().toUpperCase(),
@@ -26,44 +29,75 @@ export default function TelaCadastro({ aoSalvar }: Props) {
     });
 
     setNome(''); setWhatsapp(''); setEndereco(''); setIndicacao(''); setReputacao(''); setSegmento('EMPRESTIMO');
-    Alert.alert("Sucesso", "Cliente cadastrado!");
+    Alert.alert(t('common.sucesso'), "Cliente cadastrado!");
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Novo Cliente</Text>
+      <Text style={styles.titulo}>{t('cadastro.titulo')}</Text>
       
       <View style={styles.form}>
-        <Text style={styles.label}>Nome Completo *</Text>
-        <TextInput style={styles.input} value={nome} onChangeText={setNome} placeholder="Ex: João da Silva" placeholderTextColor="#999"/>
+        <Text style={styles.label}>{t('cadastro.nome')}</Text>
+        <TextInput 
+          style={styles.input} 
+          value={nome} 
+          onChangeText={setNome} 
+          placeholder={t('cadastro.nomePlaceholder')} 
+          placeholderTextColor="#999"
+        />
 
-        <Text style={styles.label}>Segmento</Text>
+        <Text style={styles.label}>{t('cadastro.segmento')}</Text>
         <View style={styles.rowSegmento}>
            <TouchableOpacity onPress={() => setSegmento('EMPRESTIMO')} style={[styles.btnSeg, segmento === 'EMPRESTIMO' && styles.btnSegAtivo]}>
-             <Text style={[styles.txtSeg, segmento === 'EMPRESTIMO' && styles.txtSegAtivo]}>Empréstimo</Text>
+             <Text style={[styles.txtSeg, segmento === 'EMPRESTIMO' && styles.txtSegAtivo]}>{t('cadastro.segEmprestimo')}</Text>
            </TouchableOpacity>
            <TouchableOpacity onPress={() => setSegmento('VENDA')} style={[styles.btnSeg, segmento === 'VENDA' && styles.btnSegAtivo]}>
-             <Text style={[styles.txtSeg, segmento === 'VENDA' && styles.txtSegAtivo]}>Venda</Text>
+             <Text style={[styles.txtSeg, segmento === 'VENDA' && styles.txtSegAtivo]}>{t('cadastro.segVenda')}</Text>
            </TouchableOpacity>
            <TouchableOpacity onPress={() => setSegmento('AMBOS')} style={[styles.btnSeg, segmento === 'AMBOS' && styles.btnSegAtivo]}>
-             <Text style={[styles.txtSeg, segmento === 'AMBOS' && styles.txtSegAtivo]}>Ambos</Text>
+             <Text style={[styles.txtSeg, segmento === 'AMBOS' && styles.txtSegAtivo]}>{t('cadastro.segAmbos')}</Text>
            </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>WhatsApp (Apenas números)</Text>
-        <TextInput style={styles.input} value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" placeholder="Ex: 11999999999" placeholderTextColor="#999"/>
+        <Text style={styles.label}>{t('cadastro.whatsapp')}</Text>
+        <TextInput 
+          style={styles.input} 
+          value={whatsapp} 
+          onChangeText={setWhatsapp} 
+          keyboardType="phone-pad" 
+          placeholder="Ex: 11999999999" 
+          placeholderTextColor="#999"
+        />
 
-        <Text style={styles.label}>Endereço</Text>
-        <TextInput style={styles.input} value={endereco} onChangeText={setEndereco} placeholder="Rua, Número, Bairro" placeholderTextColor="#999"/>
+        <Text style={styles.label}>{t('cadastro.endereco')}</Text>
+        <TextInput 
+          style={styles.input} 
+          value={endereco} 
+          onChangeText={setEndereco} 
+          placeholder="Rua, Número, Bairro" 
+          placeholderTextColor="#999"
+        />
 
-        <Text style={styles.label}>Indicação</Text>
-        <TextInput style={styles.input} value={indicacao} onChangeText={setIndicacao} placeholder="Opcional" placeholderTextColor="#999"/>
+        <Text style={styles.label}>{t('cadastro.indicacao')}</Text>
+        <TextInput 
+          style={styles.input} 
+          value={indicacao} 
+          onChangeText={setIndicacao} 
+          placeholder="Opcional" 
+          placeholderTextColor="#999"
+        />
 
-        <Text style={styles.label}>Reputação Inicial</Text>
-        <TextInput style={styles.input} value={reputacao} onChangeText={setReputacao} placeholder="Ex: Bom pagador, Neutro..." placeholderTextColor="#999"/>
+        <Text style={styles.label}>{t('cadastro.reputacao')}</Text>
+        <TextInput 
+          style={styles.input} 
+          value={reputacao} 
+          onChangeText={setReputacao} 
+          placeholder="Ex: Bom pagador, Neutro..." 
+          placeholderTextColor="#999"
+        />
 
         <TouchableOpacity style={styles.btnSalvar} onPress={handleSalvar}>
-          <Text style={styles.txtBtn}>CADASTRAR CLIENTE</Text>
+          <Text style={styles.txtBtn}>{t('cadastro.btnSalvar')}</Text>
         </TouchableOpacity>
       </View>
     </View>

@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // <--- Importação para salvar idioma
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next'; // <--- Importação da Tradução
 import {
   Alert,
   Image,
@@ -21,6 +23,7 @@ const URL_GERENCIAMENTO = 'https://fantastic-clafoutis-45d812.netlify.app/index.
 
 export default function Perfil() {
   const router = useRouter();
+  const { t, i18n } = useTranslation(); // <--- Hook de tradução iniciado
   const { loading, isPremium, refresh } = useAssinatura(); 
   const [email, setEmail] = useState('');
   const [modalDadosVisivel, setModalDadosVisivel] = useState(false);
@@ -46,12 +49,18 @@ export default function Perfil() {
     });
   }, []);
 
+  // --- FUNÇÃO PARA MUDAR IDIOMA ---
+  const mudarIdioma = async (lang: string) => {
+    await AsyncStorage.setItem('user-language', lang);
+    i18n.changeLanguage(lang);
+  };
+
   const abrirGerenciadorConta = async () => {
     const supported = await Linking.canOpenURL(URL_GERENCIAMENTO);
     if (supported) {
       await Linking.openURL(URL_GERENCIAMENTO);
     } else {
-      Alert.alert("Erro", "Não foi possível abrir o navegador.");
+      Alert.alert(t('common.erro') || "Erro", "Não foi possível abrir o navegador.");
     }
   };
 
@@ -87,9 +96,39 @@ export default function Perfil() {
         </View>
       </View>
 
+      {/* --- SEÇÃO DE IDIOMA (NOVO) --- */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('perfil.idioma') || 'Idioma / Language'}</Text>
+        <View style={styles.langContainer}>
+            <TouchableOpacity 
+              style={[styles.langBtn, i18n.language === 'pt' && styles.langBtnActive]} 
+              onPress={() => mudarIdioma('pt')}
+            >
+              <Text style={{fontSize: 20}}>🇧🇷</Text>
+              <Text style={[styles.langText, i18n.language === 'pt' && styles.langTextActive]}>PT</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.langBtn, i18n.language === 'en' && styles.langBtnActive]} 
+              onPress={() => mudarIdioma('en')}
+            >
+              <Text style={{fontSize: 20}}>🇺🇸</Text>
+              <Text style={[styles.langText, i18n.language === 'en' && styles.langTextActive]}>EN</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.langBtn, i18n.language === 'es' && styles.langBtnActive]} 
+              onPress={() => mudarIdioma('es')}
+            >
+              <Text style={{fontSize: 20}}>🇪🇸</Text>
+              <Text style={[styles.langText, i18n.language === 'es' && styles.langTextActive]}>ES</Text>
+            </TouchableOpacity>
+        </View>
+      </View>
+
       {/* ÁREA DE STATUS + LINK EXTERNO */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Status da Conta</Text>
+        <Text style={styles.sectionTitle}>{t('perfil.statusConta') || 'Status da Conta'}</Text>
         
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -109,25 +148,25 @@ export default function Perfil() {
 
           {/* O ÚNICO LUGAR QUE LEVA PRO SITE (Discreto e Funcional) */}
           <TouchableOpacity style={styles.btnManage} onPress={abrirGerenciadorConta}>
-            <Text style={styles.txtManage}>Gerenciar Conta Web</Text>
+            <Text style={styles.txtManage}>{t('perfil.gerenciarWeb') || 'Gerenciar Conta Web'}</Text>
             <Ionicons name="open-outline" size={16} color="#FFF" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* MENU DE AÇÕES (Botão SAIR removido) */}
+      {/* MENU DE AÇÕES (Botão SAIR removido conforme solicitado) */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Opções</Text>
+        <Text style={styles.sectionTitle}>{t('perfil.opcoes') || 'Opções'}</Text>
         
         <TouchableOpacity style={styles.menuItem} onPress={() => setModalDadosVisivel(true)}>
           <Ionicons name="person-outline" size={20} color="#555" />
-          <Text style={styles.menuText}>Meus Dados</Text>
+          <Text style={styles.menuText}>{t('perfil.meusDados') || 'Meus Dados'}</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={abrirSuporte}>
           <Ionicons name="help-circle-outline" size={20} color="#555" />
-          <Text style={styles.menuText}>Suporte Técnico</Text>
+          <Text style={styles.menuText}>{t('perfil.suporte') || 'Suporte Técnico'}</Text>
           <Ionicons name="chevron-forward" size={20} color="#CCC" />
         </TouchableOpacity>
       </View>
@@ -167,5 +206,12 @@ const styles = StyleSheet.create({
   menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 16, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: '#F0F0F0' },
   menuText: { flex: 1, marginLeft: 15, fontSize: 15, color: '#333' },
   
-  version: { textAlign: 'center', color: '#CCC', marginTop: 30, marginBottom: 40, fontSize: 12 }
+  version: { textAlign: 'center', color: '#CCC', marginTop: 30, marginBottom: 40, fontSize: 12 },
+
+  // ESTILOS DE IDIOMA
+  langContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
+  langBtn: { flex: 1, backgroundColor: '#FFF', paddingVertical: 10, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: '#DDD', flexDirection:'row', justifyContent:'center', gap: 8 },
+  langBtnActive: { borderColor: '#2980B9', backgroundColor: '#EBF5FB' },
+  langText: { fontWeight: 'bold', color: '#7F8C8D' },
+  langTextActive: { color: '#2980B9' }
 });
